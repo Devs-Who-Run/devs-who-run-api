@@ -24,11 +24,44 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var partnerConference = new[] { "TIL Conf" }
-;
+app.MapGet("/getPartnerConference", async (DevsWhoRunDbContext db) =>
+{
+    try
+    {
+        var conferences = await db.Members.Where(m => m.UserType == UserType.Conf).ToListAsync();
 
+        if (!conferences.Any())
+        {
+            return Results.NotFound(new { Message = "No partner conferences found." });
+        }
 
-app.MapGet("/getPartnerConference", () => partnerConference).WithName("GetPartnerConferences").WithOpenApi();
+        return Results.Ok(conferences);
+    }
+    catch (Exception e)
+    {
+        return Results.Problem(e.Message, statusCode: 500);
+    }
+
+});
+
+app.MapGet("/getPartnerMeetup", async (DevsWhoRunDbContext db) =>
+{
+    try
+    {
+        var meetups = await db.Members.Where(m => m.UserType == UserType.Meetup).ToListAsync();
+
+        if (!meetups.Any())
+        {
+            return Results.NotFound(new { Message = "No partner meetup found." });
+        }
+
+        return Results.Ok(meetups);
+    }
+    catch (Exception e)
+    {
+        return Results.Problem(e.Message, statusCode: 500);
+    }
+});
 
 app.MapPost("/addMember", async (Member member, DevsWhoRunDbContext db) =>
 {
@@ -50,7 +83,7 @@ app.MapPost("/addMember", async (Member member, DevsWhoRunDbContext db) =>
     }
     catch (Exception ex)
     {
-        return Results.Problem("Failed to add member", statusCode: 500);
+        return Results.Problem(ex.Message, statusCode: 500);
     }
 });
 
